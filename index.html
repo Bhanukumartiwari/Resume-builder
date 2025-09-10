@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quick Resume Builder — Multiple Templates</title>
+  <meta name="description" content="Create professional resumes: multiple templates, live preview, editable sections and download PDF. Deploy on GitHub Pages." />
+  <meta name="keywords" content="resume builder, resume templates, pdf resume, online resume maker" />
+  <meta name="author" content="Bhanu Kumar Tiwari" />
+
+  <!-- html2pdf for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg1: linear-gradient(135deg,#0f172a,#001219);
+      --card-bg: #ffffff;
+      --muted: #6b7280;
+      --accent: #0ea5e9;
+      --accent-2: #7c3aed;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, Roboto, system-ui, -apple-system, 'Segoe UI', Arial;color:#0b1220;background:linear-gradient(180deg,#0f172a,#081022);-webkit-font-smoothing:antialiased}
+    /* App layout */
+    .wrap{max-width:1200px;margin:26px auto;padding:18px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#e6eef8;margin-bottom:18px}
+    header .brand{font-weight:700;font-size:1.25rem}
+    .top-actions{display:flex;gap:8px;align-items:center}
+    .grid{display:grid;grid-template-columns:360px 1fr;gap:16px}
+    .card{background:rgba(255,255,255,0.03);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    /* Form */
+    label{display:block;font-size:0.85rem;color:#cfe8ff;margin-top:10px}
+    input[type=text],input[type=email],input[type=tel],select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#eaf6ff;margin-top:6px;font-size:0.95rem}
+    textarea{min-height:70px;resize:vertical}
+    .btn{display:inline-block;padding:9px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#001;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#e6eef8}
+    .small{padding:8px 10px;font-size:0.9rem}
+    .muted{color:#cfe8ff;font-size:0.85rem}
+    .hint{font-size:12px;color:#9fb8d8;margin-top:6px}
+    /* Preview */
+    .preview-wrap{padding:18px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;min-height:600px;overflow:auto}
+    .resume{background:var(--card-bg);color:#0b1220;padding:26px;border-radius:8px;max-width:800px;margin:auto;box-shadow:0 8px 30px rgba(2,6,23,0.2);transition:all .25s ease}
+    .resume .name{font-size:22px;font-weight:700}
+    .resume .role{color:var(--muted);margin-top:3px}
+    .section{margin-top:14px}
+    .section h3{font-size:13px;margin:0 0 8px 0;letter-spacing:0.6px}
+    .bullets{margin:6px 0 0 18px}
+    .two-col{display:flex;gap:18px}
+    .col-left{flex:1}
+    .col-right{flex:1}
+    /* Template styles */
+    /* Modern */
+    .tpl-modern .resume{border-left:8px solid var(--accent)}
+    .tpl-modern .section h3{color:var(--accent)}
+    /* Minimal */
+    .tpl-minimal .resume{font-family:Roboto, Arial;box-shadow:none;border:1px solid #e6eef6}
+    .tpl-minimal .section h3{background:#f3f4f6;padding:6px;border-radius:4px}
+    /* Professional */
+    .tpl-professional .resume{border-top:6px solid var(--accent-2)}
+    .tpl-professional .section{border-bottom:1px dashed rgba(0,0,0,0.06);padding-bottom:10px}
+    /* Dark mode */
+    .dark body{background:linear-gradient(180deg,#071022,#081122)}
+    .dark .card{background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.02)}
+    .dark .resume{background:#071022;color:#e6eef8;border-color:rgba(255,255,255,0.03)}
+    .controls-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+    .list-item{display:flex;gap:8px;align-items:flex-start;margin-top:8px}
+    .list-item input,.list-item textarea{flex:1}
+    .remove-btn{background:#ff7b7b;color:#fff;padding:6px 8px;border-radius:6px;border:none;cursor:pointer}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}.card{margin-bottom:12px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <header>
+      <div>
+        <div class="brand">Quick Resume Builder</div>
+        <div class="muted">Multiple templates • Live preview • Download PDF</div>
+      </div>
+      <div class="top-actions">
+        <button id="loadExample" class="btn small">Load Example</button>
+        <button id="toggleTheme" class="btn ghost small">Dark</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: FORM -->
+      <div class="card" id="formCard" aria-label="Resume Form">
+        <label>Template</label>
+        <select id="templateSelect" aria-label="Choose template">
+          <option value="tpl-modern">Modern</option>
+          <option value="tpl-minimal">Minimal</option>
+          <option value="tpl-professional">Professional</option>
+        </select>
+
+        <label>Full name</label><input id="fullName" type="text" placeholder="John Doe">
+
+        <label>Title / Role</label><input id="role" type="text" placeholder="Product Designer">
+
+        <label>Contact (email • phone • city)</label><input id="contact" type="text" placeholder="you@example.com • +91 98xxxx • City">
+
+        <label>Professional summary</label><textarea id="summary" placeholder="Short professional summary..."></textarea>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <label style="margin:0">Experience</label>
+          <button id="addExp" class="btn small" style="margin-left:auto">+ Add</button>
+        </div>
+        <div id="experienceList" class="muted hint"></div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
+          <label style="margin:0">Projects</label>
+          <button id="addProj" class="btn small" style="margin-left:auto">+ Add</button>
+        </div>
+        <div id="projectList" class="muted hint"></div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
+          <label style="margin:0">Education</label>
+          <button id="addEdu" class="btn small" style="margin-left:auto">+ Add</button>
+        </div>
+        <div id="educationList" class="muted hint"></div>
+
+        <label style="margin-top:12px">Skills (comma separated)</label><input id="skills" type="text" placeholder="SQL, Power BI, Excel">
+
+        <div class="controls-row" style="margin-top:14px">
+          <button id="previewBtn" class="btn">Preview</button>
+          <button id="downloadBtn" class="btn">Download PDF</button>
+          <button id="saveLocal" class="btn ghost">Save (local)</button>
+          <button id="clearBtn" class="btn ghost">Clear</button>
+        </div>
+
+        <div class="hint" style="margin-top:12px">Tip: add multiple experience/project items using the + Add buttons.</div>
+      </div>
+
+      <!-- RIGHT: PREVIEW -->
+      <div class="card preview-wrap" id="previewCard">
+        <div id="previewOuter">
+          <!-- Preview inserted by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Data model ----------
+    const state = {
+      template: 'tpl-modern',
+      personal: { name: '', role: '', contact: '' },
+      summary: '',
+      experience: [], // {companyRole, description}
+      projects: [],   // {title, description}
+      education: [],  // {text}
+      skills: '',
+      dark: false
+    };
+
+    // DOM refs
+    const templateSelect = document.getElementById('templateSelect');
+    const fullName = document.getElementById('fullName');
+    const role = document.getElementById('role');
+    const contact = document.getElementById('contact');
+    const summaryEl = document.getElementById('summary');
+    const experienceList = document.getElementById('experienceList');
+    const projectList = document.getElementById('projectList');
+    const educationList = document.getElementById('educationList');
+    const skillsEl = document.getElementById('skills');
+    const previewOuter = document.getElementById('previewOuter');
+
+    // Buttons
+    const addExpBtn = document.getElementById('addExp');
+    const addProjBtn = document.getElementById('addProj');
+    const addEduBtn = document.getElementById('addEdu');
+    const previewBtn = document.getElementById('previewBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const loadExampleBtn = document.getElementById('loadExample');
+    const toggleThemeBtn = document.getElementById('toggleTheme');
+    const saveLocalBtn = document.getElementById('saveLocal');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // helpers
+    function createInputPair(placeholder1, placeholder2, value1='', value2='') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'list-item';
+      const in1 = document.createElement('input');
+      in1.type = 'text'; in1.placeholder = placeholder1; in1.value = value1;
+      const in2 = document.createElement('textarea');
+      in2.placeholder = placeholder2; in2.value = value2;
+      const remove = document.createElement('button');
+      remove.className = 'remove-btn';
+      remove.innerText = 'Remove';
+      remove.onclick = () => wrapper.remove();
+      wrapper.appendChild(in1); wrapper.appendChild(in2); wrapper.appendChild(remove);
+      return { wrapper, in1, in2, remove };
+    }
+    function createSingleInput(placeholder, value='') {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'list-item';
+      const inp = document.createElement('input');
+      inp.type='text'; inp.placeholder = placeholder; inp.value = value;
+      const remove = document.createElement('button');
+      remove.className = 'remove-btn'; remove.innerText='Remove'; remove.onclick = () => wrapper.remove();
+      wrapper.appendChild(inp); wrapper.appendChild(remove);
+      return { wrapper, inp, remove };
+    }
+
+    // ---------- UI wiring ----------
+    function refreshListDisplays() {
+      // experience
+      experienceList.innerHTML = '';
+      if (state.experience.length === 0) {
+        const p = document.createElement('div'); p.className='muted hint'; p.innerText='No experience items yet.';
+        experienceList.appendChild(p);
+      } else {
+        state.experience.forEach((it, idx) => {
+          const { wrapper, in1, in2, remove } = createInputPair('Company — Role (Dates)', 'Description / Achievements', it.companyRole, it.description);
+          in1.oninput = e => state.experience[idx].companyRole = e.target.value;
+          in2.oninput = e => state.experience[idx].description = e.target.value;
+          remove.onclick = () => { state.experience.splice(idx,1); refreshListDisplays(); };
+          experienceList.appendChild(wrapper);
+        });
+      }
+
+      // projects
+      projectList.innerHTML = '';
+      if (state.projects.length === 0) {
+        const p = document.createElement('div'); p.className='muted hint'; p.innerText='No project items yet.';
+        projectList.appendChild(p);
+      } else {
+        state.projects.forEach((it, idx) => {
+          const { wrapper, in1, in2, remove } = createInputPair('Project Title', 'Project details', it.title, it.description);
+          in1.oninput = e => state.projects[idx].title = e.target.value;
+          in2.oninput = e => state.projects[idx].description = e.target.value;
+          remove.onclick = () => { state.projects.splice(idx,1); refreshListDisplays(); };
+          projectList.appendChild(wrapper);
+        });
+      }
+
+      // education
+      educationList.innerHTML = '';
+      if (state.education.length === 0) {
+        const p = document.createElement('div'); p.className='muted hint'; p.innerText='No education items yet.';
+        educationList.appendChild(p);
+      } else {
+        state.education.forEach((it, idx) => {
+          const { wrapper, inp, remove } = createSingleInput('Degree — Institute (Year)', it);
+          inp.oninput = e => state.education[idx] = e.target.value;
+          remove.onclick = () => { state.education.splice(idx,1); refreshListDisplays(); };
+          educationList.appendChild(wrapper);
+        });
+      }
+    }
+
+    function renderPreview() {
+      // build HTML based on state and template
+      const tplClass = state.template;
+      const skills = (state.skills || '').trim();
+      let html = `<div id="resumeCard" class="resume" role="document" aria-label="Generated resume">`;
+
+      html += `<div class="name">${escapeHtml(state.personal.name || 'Full Name')}</div>`;
+      html += `<div class="role">${escapeHtml(state.personal.role || '')}</div>`;
+      if (state.personal.contact) html += `<div style="margin-top:6px;color:#666">${escapeHtml(state.personal.contact)}</div>`;
+
+      // summary
+      if (state.summary) {
+        html += `<div class="section"><h3>Summary</h3><div>${nl2br(escapeHtml(state.summary))}</div></div>`;
+      }
+
+      // experience
+      if (state.experience.length) {
+        html += `<div class="section"><h3>Experience</h3>`;
+        state.experience.forEach(it=>{
+          if (!it.companyRole && !it.description) return;
+          html += `<div style="margin-bottom:8px"><strong>${escapeHtml(it.companyRole)}</strong>`;
+          if (it.description) html += `<div class="bullets">${nl2br(escapeHtml(it.description))}</div>`;
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+
+      // projects
+      if (state.projects.length) {
+        html += `<div class="section"><h3>Projects</h3>`;
+        state.projects.forEach(p=>{
+          if (!p.title && !p.description) return;
+          html += `<div style="margin-bottom:8px"><strong>${escapeHtml(p.title)}</strong>`;
+          if (p.description) html += `<div>${nl2br(escapeHtml(p.description))}</div>`;
+          html += `</div>`;
+        });
+        html += `</div>`;
+      }
+
+      // education
+      if (state.education.length) {
+        html += `<div class="section"><h3>Education</h3>`;
+        state.education.forEach(ed => html += `<div>${escapeHtml(ed)}</div>`);
+        html += `</div>`;
+      }
+
+      // skills
+      if (skills) {
+        html += `<div class="section"><h3>Skills</h3><div>${escapeHtml(skills)}</div></div>`;
+      }
+
+      html += `</div>`; // resume
+      // set previewOuter inner HTML in a wrapper with template class
+      previewOuter.innerHTML = `<div class="${tplClass}">${html}</div>`;
+
+      // small animation (fade-in)
+      const resumeNode = document.getElementById('resumeCard');
+      if (resumeNode) {
+        resumeNode.style.opacity = 0; resumeNode.style.transform = 'translateY(6px)';
+        setTimeout(()=>{ resumeNode.style.transition = 'all .35s ease'; resumeNode.style.opacity = 1; resumeNode.style.transform = 'translateY(0)'; }, 10);
+      }
+    }
+
+    // utilities
+    function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+    function nl2br(s){ return s.replace(/\n/g,'<br>'); }
+
+    // initial wiring
+    templateSelect.value = state.template;
+    templateSelect.onchange = e => { state.template = e.target.value; renderPreview(); };
+
+    fullName.oninput = e => { state.personal.name = e.target.value; }
+    role.oninput = e => { state.personal.role = e.target.value; }
+    contact.oninput = e => { state.personal.contact = e.target.value; }
+    summaryEl.oninput = e => { state.summary = e.target.value; }
+    skillsEl.oninput = e => { state.skills = e.target.value; }
+
+    addExpBtn.onclick = () => { state.experience.push({companyRole:'', description:''}); refreshListDisplays(); renderPreview(); };
+    addProjBtn.onclick = () => { state.projects.push({title:'', description:''}); refreshListDisplays(); renderPreview(); };
+    addEduBtn.onclick = () => { state.education.push(''); refreshListDisplays(); renderPreview(); };
+
+    previewBtn.onclick = () => { // copy form values into state for top-level fields and render
+      state.personal.name = fullName.value;
+      state.personal.role = role.value;
+      state.personal.contact = contact.value;
+      state.summary = summaryEl.value;
+      state.skills = skillsEl.value;
+      // gather list items values from DOM before render
+      // Experience: read experienceList inputs
+      const expWrappers = experienceList.querySelectorAll('.list-item');
+      if (expWrappers.length) {
+        state.experience = []; // rebuild
+        expWrappers.forEach(w => {
+          const inputs = w.querySelectorAll('input, textarea');
+          const companyRole = inputs[0]?.value || '';
+          const description = inputs[1]?.value || '';
+          state.experience.push({ companyRole, description });
+        });
+      }
+      const projWrappers = projectList.querySelectorAll('.list-item');
+      if (projWrappers.length) {
+        state.projects = [];
+        projWrappers.forEach(w => {
+          const inputs = w.querySelectorAll('input, textarea');
+          const title = inputs[0]?.value || '';
+          const description = inputs[1]?.value || '';
+          state.projects.push({ title, description });
+        });
+      }
+      const eduWrappers = educationList.querySelectorAll('.list-item');
+      if (eduWrappers.length) {
+        state.education = [];
+        eduWrappers.forEach(w => {
+          const inp = w.querySelector('input');
+          state.education.push(inp?.value || '');
+        });
+      }
+      renderPreview();
+    };
+
+    // live: update preview as certain fields change
+    [fullName, role, contact, summaryEl, skillsEl].forEach(el => el.addEventListener('input', () => {
+      // update corresponding state
+      state.personal.name = fullName.value;
+      state.personal.role = role.value;
+      state.personal.contact = contact.value;
+      state.summary = summaryEl.value;
+      state.skills = skillsEl.value;
+      renderPreview();
+    }));
+
+    // download PDF
+    downloadBtn.onclick = async () => {
+      // ensure latest preview
+      previewBtn.click();
+      const resumeNode = document.querySelector('#previewOuter .resume');
+      if(!resumeNode){ alert('Preview is empty — click Preview first.'); return; }
+
+      // clone to avoid page styles affecting PDF; set explicit width for A4 ratio
+      const clone = resumeNode.cloneNode(true);
+      clone.style.background = '#fff';
+      clone.style.padding = '26px';
+      clone.style.width = '800px';
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-9999px';
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      const opt = {
+        margin: 0.4,
+        filename: (state.personal.name || 'resume').replace(/\s+/g,'_') + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      try {
+        await html2pdf().from(clone).set(opt).save();
+      } catch (err) {
+        console.error(err);
+        alert('PDF generation failed. Try again.');
+      } finally {
+        document.body.removeChild(wrapper);
+      }
+    };
+
+    // load example
+    loadExampleBtn.onclick = () => {
+      state.personal.name = 'Bhanu Kumar Tiwari';
+      state.personal.role = 'Data Analyst';
+      state.personal.contact = '+91 9782434496 • tiwaribhanu09@gmail.com • Delhi, India';
+      state.summary = 'Data Analyst with strong experience in data visualization, dashboarding, SQL, Power BI and Python. Skilled at turning raw data into actionable insights.';
+      state.experience = [
+        { companyRole: 'GST Corporation Limited — Quality Control Executive (Jan 2022 – Present)', description: 'Conducted product inspections per ISO standards, performed root-cause analysis, and collaborated with cross-functional teams for continuous improvement.'},
+        { companyRole: 'Junior Analyst — Internship (Jun 2021 – Dec 2021)', description: 'Built reports and ETL scripts; automated monthly KPIs dashboards.'}
+      ];
+      state.projects = [
+        { title: 'Zomato Restaurant Analysis', description: 'Analyzed dataset of 9,551 restaurants across countries; implemented interactive Power BI dashboards.' }
+      ];
+      state.education = ['B.Tech in Mechanical — G.B. Pant Govt. Engineering College (2019)'];
+      state.skills = 'SQL, Power BI, Excel, Python, Data Visualization';
+      // populate form inputs & lists
+      fullName.value = state.personal.name;
+      role.value = state.personal.role;
+      contact.value = state.personal.contact;
+      summaryEl.value = state.summary;
+      skillsEl.value = state.skills;
+      refreshListDisplays();
+      renderPreview();
+    };
+
+    // theme toggle (dark mode)
+    toggleThemeBtn.onclick = () => {
+      state.dark = !state.dark;
+      document.documentElement.classList.toggle('dark', state.dark);
+      toggleThemeBtn.innerText = state.dark ? 'Light' : 'Dark';
+    };
+
+    // save local
+    saveLocalBtn.onclick = () => {
+      // rebuild arrays from current list DOM
+      state.personal.name = fullName.value; state.personal.role = role.value; state.personal.contact = contact.value;
+      state.summary = summaryEl.value; state.skills = skillsEl.value;
+      // experience / projects / education update
+      const readList = (container, isPair=false) => {
+        const result = [];
+        const wrappers = container.querySelectorAll('.list-item');
+        wrappers.forEach(w => {
+          if (isPair) {
+            const inputs = w.querySelectorAll('input, textarea');
+            result.push({ title: inputs[0]?.value || inputs[0]?.innerText || '', desc: inputs[1]?.value || '' });
+          } else {
+            const input = w.querySelector('input');
+            result.push(input?.value || '');
+          }
+        });
+        return result;
+      };
+      // for experience & projects structure, our createInputPair uses inputs[0]=companyRole, inputs[1]=description
+      // But when saving we assume state arrays are good already; just store state as-is
+      localStorage.setItem('quickResumeData', JSON.stringify(state));
+      alert('Saved to browser localStorage. You can continue later on this device.');
+    };
+
+    // clear
+    clearBtn.onclick = () => {
+      if (!confirm('Clear all fields?')) return;
+      state.personal = { name: '', role: '', contact: '' };
+      state.summary = ''; state.experience = []; state.projects = []; state.education = []; state.skills = '';
+      fullName.value = role.value = contact.value = summaryEl.value = skillsEl.value = '';
+      refreshListDisplays(); renderPreview();
+      localStorage.removeItem('quickResumeData');
+    };
+
+    // read local if present
+    (function hydrateFromLocal(){
+      const saved = localStorage.getItem('quickResumeData');
+      if (saved) {
+        try {
+          const s = JSON.parse(saved);
+          Object.assign(state, s);
+          // populate form fields
+          fullName.value = state.personal.name || ''; role.value = state.personal.role || ''; contact.value = state.personal.contact || '';
+          summaryEl.value = state.summary || ''; skillsEl.value = state.skills || '';
+          templateSelect.value = state.template || 'tpl-modern';
+          refreshListDisplays(); renderPreview();
+        } catch(e){ console.warn('failed to parse saved resume'); }
+      } else {
+        // initial empty lists display
+        refreshListDisplays(); renderPreview();
+      }
+    })();
+
+    // helper: refresh list displays
+    refreshListDisplays(); renderPreview();
+  </script>
+</body>
+</html>
+
